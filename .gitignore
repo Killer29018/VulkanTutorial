@@ -1,3 +1,5 @@
 bin/**
 build/**
 *.bat
+
+compile_commands.json

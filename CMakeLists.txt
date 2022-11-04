@@ -30,7 +30,7 @@ endif ()
 
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${outputDirectory})
 
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++2a -O2 -Wall -Wextra -Wpedantic \
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++2a -g -Wall -Wextra -Wpedantic \
     -Wno-unused-parameter -Wno-unknown-pragmas -Wno-unused-variable")
 
 file (GLOB_RECURSE projectFiles CONFIGURE_DEPENDS "src/*.cpp" "src/*.hpp")
