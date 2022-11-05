@@ -58,6 +58,8 @@ VkResult CreateDebugUtilsMessengerExt(VkInstance instance, const VkDebugUtilsMes
 void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger,
         const VkAllocationCallbacks* pAllocator);
 
+static std::vector<char> readFile(const std::string& filename);
+
 class Application 
 {
 public:
@@ -75,6 +77,9 @@ private:
     VkSwapchainKHR m_Swapchain;
     std::vector<VkImage> m_SwapchainImages;
     std::vector<VkImageView> m_SwapchainImageViews;
+    VkPipelineLayout m_PipelineLayout;
+    VkRenderPass m_RenderPass;
+    VkPipeline m_GraphicsPipeline;
 
     VkFormat m_SwapchainImageFormat;
     VkExtent2D m_SwapchainExtent;
@@ -108,6 +113,11 @@ private:
     VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 
     void createImageViews();
+
+    void createRenderPass();
+
+    void createGraphicsPipeline();
+    VkShaderModule createShaderModule(const std::vector<char>& code);
 
     bool checkValidationLayerSupport();
     void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
