@@ -35,6 +35,8 @@ const std::vector<const char*> deviceExtensions = {
     const bool enableValidationLayers = true;
 #endif
 
+#define MAX_FRAMES_IN_FLIGHT 2
+
 struct QueueFamilyIndices
 {
     std::optional<uint32_t> graphicsFamily;
@@ -80,9 +82,18 @@ private:
     VkPipelineLayout m_PipelineLayout;
     VkRenderPass m_RenderPass;
     VkPipeline m_GraphicsPipeline;
+    std::vector<VkFramebuffer> m_SwapchainFramebuffers;
+    VkCommandPool m_CommandPool;
+    std::vector<VkCommandBuffer> m_CommandBuffers;
+
+    std::vector<VkSemaphore> m_ImageAvailableSemaphores;
+    std::vector<VkSemaphore> m_RenderFinishedSemaphores;
+    std::vector<VkFence> m_InFlightFences;
 
     VkFormat m_SwapchainImageFormat;
     VkExtent2D m_SwapchainExtent;
+
+    uint32_t m_CurrentFrame = 0;
 
 private:
     void initWindow() ;
@@ -118,6 +129,18 @@ private:
 
     void createGraphicsPipeline();
     VkShaderModule createShaderModule(const std::vector<char>& code);
+
+    void createFramebuffers();
+
+    void createCommandPool();
+
+    void createCommandBuffers();
+
+    void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+
+    void createSyncObjects();
+
+    void drawFrame();
 
     bool checkValidationLayerSupport();
     void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
