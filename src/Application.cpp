@@ -304,7 +304,7 @@ int Application::rateDeviceSuitability(VkPhysicalDevice device)
 
     QueueFamilyIndices indices = findQueueFamilies(device);
 
-    int score = 0;
+    int score = 1;
 
     if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) score += 1000;
 
@@ -318,8 +318,6 @@ int Application::rateDeviceSuitability(VkPhysicalDevice device)
             !swapChainSupport.presentModes.empty();
     }
 
-    if (!deviceFeatures.geometryShader)
-        return 0;
     if (!indices.isComplete())
         return 0;
     if (!swapChainAdequate)
@@ -995,7 +993,7 @@ uint32_t Application::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags 
 
     for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
     {
-        if ((typeFilter & (i << i)) &&
+        if ((typeFilter & (1 << i)) &&
                 (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
         {
             return i;
