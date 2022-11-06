@@ -48,7 +48,7 @@ struct QueueFamilyIndices
     }
 };
 
-struct SwapChainSupportDetails
+struct SwapchainSupportDetails
 {
     VkSurfaceCapabilitiesKHR capabilities;
     std::vector<VkSurfaceFormatKHR> formats;
@@ -64,6 +64,8 @@ static std::vector<char> readFile(const std::string& filename);
 
 class Application 
 {
+public:
+    bool framebufferResized = false;
 public:
     void run();
 
@@ -115,8 +117,8 @@ private:
 
     void createLogicalDevice();
 
-    void createSwapChain();
-    SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
+    void createSwapchain();
+    SwapchainSupportDetails querySwapchainSupport(VkPhysicalDevice device);
     VkSurfaceFormatKHR chooseSwapSurfaceFormat(
             const std::vector<VkSurfaceFormatKHR>& availableFormats);
     VkPresentModeKHR chooseSwapPresentMode(
@@ -142,6 +144,9 @@ private:
 
     void drawFrame();
 
+    void cleanupSwapchain();
+    void recreateSwapchain();
+
     bool checkValidationLayerSupport();
     void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
     void setupDebugMessenger();
@@ -151,5 +156,7 @@ private:
             VkDebugUtilsMessageTypeFlagsEXT messageType,
             const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
             void* pUserData);
+
+    static void framebufferResizedCallback(GLFWwindow* window, int width, int height);
 };
 #endif
