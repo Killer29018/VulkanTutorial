@@ -10,3 +10,9 @@ set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
 add_subdirectory(glfw)
 set_target_properties(glfw PROPERTIES FOLDER vendor)
+
+# STB
+add_library(stb INTERFACE)
+target_include_directories(stb INTERFACE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/stb>
+    $<INSTALL_INTERFACE:stb>)

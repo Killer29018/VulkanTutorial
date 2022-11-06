@@ -1,7 +1,10 @@
-#include "Application.hpp"
+
 #include <stdexcept>
 #include <iostream>
 #include <cstdlib>
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "Application.hpp"
 
 int main()
 {

@@ -6,6 +6,8 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+#include <stb_image.h>
+
 #include <iostream>
 #include <vector>
 #include <stdexcept>
@@ -147,6 +149,9 @@ private:
     std::vector<VkSemaphore> m_RenderFinishedSemaphores;
     std::vector<VkFence> m_InFlightFences;
 
+    VkImage m_TextureImage;
+    VkDeviceMemory m_TextureImageMemory;
+
     VkFormat m_SwapchainImageFormat;
     VkExtent2D m_SwapchainExtent;
 
@@ -207,6 +212,8 @@ private:
 
     void createCommandPool();
 
+    void createTextureImage();
+
     void createVertexBuffer();
     void createIndexBuffer();
     void createUniformBuffers();
@@ -231,6 +238,16 @@ private:
     void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, 
             VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+
+    void createImage(uint32_t width, uint32_t height, VkFormat format,
+            VkImageTiling tiling, VkImageUsageFlags usage,
+            VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
+    void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout,
+            VkImageLayout newLayout);
+    void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
+
+    VkCommandBuffer beginSingleTimeCommands();
+    void endSingleTimeCommands(VkCommandBuffer commandBuffer);
 
     bool checkValidationLayerSupport();
     void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
