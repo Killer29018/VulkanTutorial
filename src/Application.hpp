@@ -17,6 +17,9 @@
 #include <cstdint>
 #include <limits>
 #include <algorithm>
+#include <array>
+
+#include <glm/glm.hpp>
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
@@ -55,6 +58,38 @@ struct SwapchainSupportDetails
     std::vector<VkPresentModeKHR> presentModes;
 };
 
+struct Vertex 
+{
+    glm::vec2 pos;
+    glm::vec3 colour;
+
+    static VkVertexInputBindingDescription getBindingDescription()
+    {
+        VkVertexInputBindingDescription bindingDescription{};
+        bindingDescription.binding = 0;
+        bindingDescription.stride = sizeof(Vertex);
+        bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+        return bindingDescription;
+    }
+
+    static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions()
+    {
+        std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
+
+        attributeDescriptions[0].binding = 0;
+        attributeDescriptions[0].location = 0;
+        attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
+        attributeDescriptions[0].offset = offsetof(Vertex, pos);
+
+        attributeDescriptions[1].binding = 0;
+        attributeDescriptions[1].location = 1;
+        attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+        attributeDescriptions[1].offset = offsetof(Vertex, colour);
+        return attributeDescriptions;
+    }
+};
+
 VkResult CreateDebugUtilsMessengerExt(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
         const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger);
 void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger,
@@ -88,6 +123,11 @@ private:
     VkCommandPool m_CommandPool;
     std::vector<VkCommandBuffer> m_CommandBuffers;
 
+    VkBuffer m_VertexBuffer;
+    VkDeviceMemory m_VertexBufferMemory;
+    VkBuffer m_IndexBuffer;
+    VkDeviceMemory m_IndexBufferMemory;
+
     std::vector<VkSemaphore> m_ImageAvailableSemaphores;
     std::vector<VkSemaphore> m_RenderFinishedSemaphores;
     std::vector<VkFence> m_InFlightFences;
@@ -96,6 +136,20 @@ private:
     VkExtent2D m_SwapchainExtent;
 
     uint32_t m_CurrentFrame = 0;
+
+    const std::vector<Vertex> m_Vertices = 
+    {
+        {{ -0.5f, -0.5f }, { 1.0f, 0.0f, 0.0f }},
+        {{  0.5f, -0.5f }, { 0.0f, 1.0f, 0.0f }},
+        {{  0.5f,  0.5f }, { 0.0f, 0.0f, 1.0f }},
+        {{ -0.5f,  0.5f }, { 1.0f, 1.0f, 1.0f }},
+    };
+
+    const std::vector<uint16_t> m_Indices =
+    {
+        0, 1, 2,
+        0, 2, 3
+    };
 
 private:
     void initWindow() ;
@@ -136,6 +190,10 @@ private:
 
     void createCommandPool();
 
+    void createVertexBuffer();
+    void createIndexBuffer();
+    uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+
     void createCommandBuffers();
 
     void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
@@ -146,6 +204,10 @@ private:
 
     void cleanupSwapchain();
     void recreateSwapchain();
+
+    void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, 
+            VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+    void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 
     bool checkValidationLayerSupport();
     void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
