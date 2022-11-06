@@ -90,12 +90,19 @@ struct Vertex
     }
 };
 
+struct Uniforms
+{
+    alignas(16) glm::mat4 model;
+    alignas(16) glm::mat4 view;
+    alignas(16 )glm::mat4 proj;
+};
+
 VkResult CreateDebugUtilsMessengerExt(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
         const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger);
 void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger,
         const VkAllocationCallbacks* pAllocator);
 
-static std::vector<char> readFile(const std::string& filename);
+std::vector<char> readFile(const std::string& filename);
 
 class Application 
 {
@@ -127,6 +134,14 @@ private:
     VkDeviceMemory m_VertexBufferMemory;
     VkBuffer m_IndexBuffer;
     VkDeviceMemory m_IndexBufferMemory;
+
+    std::vector<VkBuffer> m_UniformBuffers;
+    std::vector<VkDeviceMemory> m_UniformBuffersMemory;
+    std::vector<void*> m_UniformBuffersMapped;
+
+    VkDescriptorSetLayout m_DescriptorSetLayout;
+    VkDescriptorPool m_DescriptorPool;
+    std::vector<VkDescriptorSet> m_DescriptorSets;
 
     std::vector<VkSemaphore> m_ImageAvailableSemaphores;
     std::vector<VkSemaphore> m_RenderFinishedSemaphores;
@@ -183,6 +198,8 @@ private:
 
     void createRenderPass();
 
+    void createDescriptorSetLayout();
+
     void createGraphicsPipeline();
     VkShaderModule createShaderModule(const std::vector<char>& code);
 
@@ -192,7 +209,11 @@ private:
 
     void createVertexBuffer();
     void createIndexBuffer();
+    void createUniformBuffers();
     uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+
+    void createDescriptorPool();
+    void createDescriptorSets();
 
     void createCommandBuffers();
 
@@ -201,6 +222,8 @@ private:
     void createSyncObjects();
 
     void drawFrame();
+
+    void updateUniformBuffer(uint32_t currentImage);
 
     void cleanupSwapchain();
     void recreateSwapchain();
