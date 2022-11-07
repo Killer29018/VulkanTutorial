@@ -52,6 +52,7 @@ target_link_libraries(${PROJECT_NAME}
         glm::glm
         glfw
         stb
+        tiny_obj
         Vulkan::Vulkan
     )
 

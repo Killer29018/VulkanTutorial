@@ -16,3 +16,10 @@ add_library(stb INTERFACE)
 target_include_directories(stb INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/stb>
     $<INSTALL_INTERFACE:stb>)
+
+# tiny_obj_loader
+add_library(tiny_obj INTERFACE)
+target_include_directories(tiny_obj INTERFACE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/tiny_obj_loader>
+    $<INSTALL_INTERFACE:tiny_obj_loader>)
+

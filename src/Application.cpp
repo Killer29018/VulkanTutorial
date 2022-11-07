@@ -102,6 +102,7 @@ void Application::initVulkan()
     createTextureImage();
     createTextureImageView();
     createTextureSampler();
+    loadModel();
     createVertexBuffer();
     createIndexBuffer();
     createUniformBuffers();
@@ -754,7 +755,8 @@ void Application::createGraphicsPipeline()
     rasterizer.rasterizerDiscardEnable = VK_FALSE;
     rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
     rasterizer.lineWidth = 1.0f;
-    rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+    // rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+    rasterizer.cullMode = VK_CULL_MODE_NONE;
     rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
     rasterizer.depthBiasEnable = VK_FALSE;
     rasterizer.depthBiasConstantFactor = 0.0f;
@@ -929,7 +931,7 @@ void Application::createFramebuffers()
 void Application::createTextureImage()
 {
     int texWidth, texHeight, texChannels;
-    stbi_uc* pixels = stbi_load("res/Textures/texture.jpg", &texWidth, &texHeight,
+    stbi_uc* pixels = stbi_load(TEXTURE_PATH.c_str(), &texWidth, &texHeight,
             &texChannels, STBI_rgb_alpha);
     VkDeviceSize imageSize = texWidth * texHeight * 4;
 
@@ -999,6 +1001,50 @@ void Application::createTextureSampler()
     if (vkCreateSampler(m_Device, &samplerInfo, nullptr, &m_TextureSampler) != VK_SUCCESS)
     {
         throw std::runtime_error("Failed to create texture sampler");
+    }
+}
+
+void Application::loadModel()
+{
+    tinyobj::attrib_t attrib;
+    std::vector<tinyobj::shape_t> shapes;
+    std::vector<tinyobj::material_t> materials;
+    std::string warn, err;
+
+    if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, MODEL_PATH.c_str()))
+    {
+        throw std::runtime_error(warn + err);
+    }
+
+    std::unordered_map<Vertex, uint32_t> uniqueVertices{};
+
+    for (const auto& shape : shapes)
+    {
+        for (const auto& index : shape.mesh.indices)
+        {
+            Vertex vertex{};
+
+            vertex.pos = {
+                attrib.vertices[3 * index.vertex_index + 0],
+                attrib.vertices[3 * index.vertex_index + 1],
+                attrib.vertices[3 * index.vertex_index + 2],
+            };
+
+            vertex.texCoord = {
+                attrib.texcoords[2 * index.texcoord_index + 0],
+                1.0f - attrib.texcoords[2 * index.texcoord_index + 1],
+            };
+
+            vertex.colour = { 1.0f, 1.0f, 1.0f };
+
+            if (uniqueVertices.count(vertex) == 0)
+            {
+                uniqueVertices[vertex] = static_cast<uint32_t>(m_Vertices.size());
+                m_Vertices.push_back(vertex);
+            }
+
+            m_Indices.push_back(uniqueVertices[vertex]);
+        }
     }
 }
 
@@ -1210,7 +1256,7 @@ void Application::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t im
         VkBuffer vertexBuffers[] = {m_VertexBuffer};
         VkDeviceSize offsets[] = {0};
         vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-        vkCmdBindIndexBuffer(commandBuffer, m_IndexBuffer, 0, VK_INDEX_TYPE_UINT16);
+        vkCmdBindIndexBuffer(commandBuffer, m_IndexBuffer, 0, VK_INDEX_TYPE_UINT32);
 
         VkViewport viewport{};
         viewport.x = 0.0f;
@@ -1342,11 +1388,9 @@ void Application::updateUniformBuffer(uint32_t currentImage)
             currentTime - startTime).count();
 
     Uniforms ubo{};
-    ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0f));
-    // ubo.model = glm::mat4(1.0f);
+    ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0, 0.0, -1.0f));
 
-    ubo.view = glm::lookAt(glm::vec3(0.0f, 2.0f, -2.0f), glm::vec3(0.0f), glm::vec3(0.0f, -1.0f, 0.0f));
-    // ubo.view = glm::lookAt(glm::vec3(0.0f, 0.0f, -2.0f), glm::vec3(0.0f), glm::vec3(0.0f, -1.0f, 0.0f));
+    ubo.view = glm::lookAt(glm::vec3(0.0f, 3.0f, 3.0f), glm::vec3(0.0f), glm::vec3(0.0f, -1.0f, 0.0f));
 
     ubo.proj = glm::perspective(glm::radians(45.0f),
             m_SwapchainExtent.width / (float)m_SwapchainExtent.height, 0.1f, 10.0f);
@@ -1415,9 +1459,9 @@ VkFormat Application::findSupportedFormat(const std::vector<VkFormat>& candidate
         {
             return format;
         }
-
-        throw std::runtime_error("Failed to find supported format");
     }
+
+    throw std::runtime_error("Failed to find supported format");
 }
 
 bool Application::hasStencilComponent(VkFormat format)

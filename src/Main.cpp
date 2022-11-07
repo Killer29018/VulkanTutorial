@@ -4,6 +4,7 @@
 #include <cstdlib>
 
 #define STB_IMAGE_IMPLEMENTATION
+#define TINYOBJLOADER_IMPLEMENTATION
 #include "Application.hpp"
 
 int main()

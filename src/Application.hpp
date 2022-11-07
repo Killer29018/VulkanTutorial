@@ -8,6 +8,8 @@
 
 #include <stb_image.h>
 
+#include <tiny_obj_loader.h>
+
 #include <iostream>
 #include <vector>
 #include <stdexcept>
@@ -15,6 +17,7 @@
 #include <cstring>
 #include <optional>
 #include <map>
+#include <unordered_map>
 #include <set>
 #include <cstdint>
 #include <limits>
@@ -22,12 +25,17 @@
 #include <array>
 
 #define GLM_FORCE_RADIANS
-#define GLM_DORCE_DEPTH_ZERO_TO_ONE
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/hash.hpp>
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
+
+const std::string MODEL_PATH = "res/Models/viking_room.obj";
+const std::string TEXTURE_PATH = "res/Textures/viking_room.png";
 
 const std::vector<const char*> validationLayers = {
     "VK_LAYER_KHRONOS_validation"
@@ -100,7 +108,23 @@ struct Vertex
 
         return attributeDescriptions;
     }
+
+    bool operator==(const Vertex& other) const
+    {
+        return (pos == other.pos && colour == other.colour && texCoord == other.texCoord);
+    }
 };
+
+namespace std
+{
+    template<> struct hash<Vertex> {
+        size_t operator()(Vertex const& vertex) const{
+            return ((hash<glm::vec3>()(vertex.pos) ^
+                (hash<glm::vec3>()(vertex.colour) << 1)) >> 1) ^
+                (hash<glm::vec2>()(vertex.texCoord) << 1);
+        }
+    };
+}
 
 struct Uniforms
 {
@@ -174,27 +198,8 @@ private:
 
     uint32_t m_CurrentFrame = 0;
 
-    const std::vector<Vertex> m_Vertices = 
-    {
-        {{ -0.5f, -0.5f, 0.0f }, { 1.0f, 0.0f, 0.0f }, { 0.0f, 0.0f }},
-        {{  0.5f, -0.5f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f }},
-        {{  0.5f,  0.5f, 0.0f }, { 0.0f, 0.0f, 1.0f }, { 1.0f, 1.0f }},
-        {{ -0.5f,  0.5f, 0.0f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f }},
-
-        {{ -0.5f, -0.5f, 0.5f }, { 1.0f, 0.0f, 0.0f }, { 0.0f, 0.0f }},
-        {{  0.5f, -0.5f, 0.5f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f }},
-        {{  0.5f,  0.5f, 0.5f }, { 0.0f, 0.0f, 1.0f }, { 1.0f, 1.0f }},
-        {{ -0.5f,  0.5f, 0.5f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f }},
-    };
-
-    const std::vector<uint16_t> m_Indices =
-    {
-        0, 1, 2,
-        0, 2, 3,
-
-        4, 5, 6,
-        4, 6, 7,
-    };
+    std::vector<Vertex> m_Vertices;
+    std::vector<uint32_t> m_Indices;
 
 private:
     void initWindow() ;
@@ -243,8 +248,10 @@ private:
     void createTextureImage();
     void createTextureImageView();
     void createTextureSampler();
-    void createVertexBuffer();
 
+    void loadModel();
+
+    void createVertexBuffer();
     void createIndexBuffer();
     void createUniformBuffers();
     uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);

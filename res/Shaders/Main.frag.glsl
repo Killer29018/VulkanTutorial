@@ -12,6 +12,7 @@ void main()
     vec4 texColour = texture(u_TexSampler, v_TexCoords);
 
     float mixValue = (sin(v_Time) + 1.0) / 2.0;
+    mixValue = 1;
 
     f_Colour = vec4(mix(v_FragColour, texColour.rgb, mixValue), 1.0);
 
