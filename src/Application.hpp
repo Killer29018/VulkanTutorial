@@ -64,6 +64,7 @@ struct Vertex
 {
     glm::vec2 pos;
     glm::vec3 colour;
+    glm::vec2 texCoord;
 
     static VkVertexInputBindingDescription getBindingDescription()
     {
@@ -75,9 +76,9 @@ struct Vertex
         return bindingDescription;
     }
 
-    static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions()
+    static std::array<VkVertexInputAttributeDescription, 3> getAttributeDescriptions()
     {
-        std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
+        std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions{};
 
         attributeDescriptions[0].binding = 0;
         attributeDescriptions[0].location = 0;
@@ -88,15 +89,22 @@ struct Vertex
         attributeDescriptions[1].location = 1;
         attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
         attributeDescriptions[1].offset = offsetof(Vertex, colour);
+
+        attributeDescriptions[2].binding = 0;
+        attributeDescriptions[2].location = 2;
+        attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
+        attributeDescriptions[2].offset = offsetof(Vertex, texCoord);
+
         return attributeDescriptions;
     }
 };
 
 struct Uniforms
 {
+    alignas(16) float time;
     alignas(16) glm::mat4 model;
     alignas(16) glm::mat4 view;
-    alignas(16 )glm::mat4 proj;
+    alignas(16) glm::mat4 proj;
 };
 
 VkResult CreateDebugUtilsMessengerExt(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
@@ -151,6 +159,8 @@ private:
 
     VkImage m_TextureImage;
     VkDeviceMemory m_TextureImageMemory;
+    VkImageView m_TextureImageView;
+    VkSampler m_TextureSampler;
 
     VkFormat m_SwapchainImageFormat;
     VkExtent2D m_SwapchainExtent;
@@ -159,10 +169,10 @@ private:
 
     const std::vector<Vertex> m_Vertices = 
     {
-        {{ -0.5f, -0.5f }, { 1.0f, 0.0f, 0.0f }},
-        {{  0.5f, -0.5f }, { 0.0f, 1.0f, 0.0f }},
-        {{  0.5f,  0.5f }, { 0.0f, 0.0f, 1.0f }},
-        {{ -0.5f,  0.5f }, { 1.0f, 1.0f, 1.0f }},
+        {{ -0.5f, -0.5f }, { 1.0f, 0.0f, 0.0f }, { 0.0f, 0.0f }},
+        {{  0.5f, -0.5f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f }},
+        {{  0.5f,  0.5f }, { 0.0f, 0.0f, 1.0f }, { 1.0f, 1.0f }},
+        {{ -0.5f,  0.5f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f }},
     };
 
     const std::vector<uint16_t> m_Indices =
@@ -213,8 +223,10 @@ private:
     void createCommandPool();
 
     void createTextureImage();
-
+    void createTextureImageView();
+    void createTextureSampler();
     void createVertexBuffer();
+
     void createIndexBuffer();
     void createUniformBuffers();
     uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
@@ -242,6 +254,7 @@ private:
     void createImage(uint32_t width, uint32_t height, VkFormat format,
             VkImageTiling tiling, VkImageUsageFlags usage,
             VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
+    VkImageView createImageView(VkImage image, VkFormat format);
     void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout,
             VkImageLayout newLayout);
     void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
